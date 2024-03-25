@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block head %}
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <meta content="og:site_name" content="{{ info.title }}" />
+
+    <meta name="twitter:card" content="player" />
+    <meta name="twitter:title" content="{{ info.author_name }}" />
+    <meta name="twitter:image" content="{{ info.thumbnail }}" />
+    <meta name="twitter:player:width" content="{{ info.width }}" />
+    <meta name="twitter:player:height" content="{{ info.height }}" />
+    <meta name="twitter:player:stream" content="{{ info.url|safe }}" />
+
+    <meta property="og:video" content="{{ info.url|safe }}" />
+    <meta property="og:video:secure_uri" content="{{ info.url|safe }}" />
+    <meta property="og:video:type" content="video/mp4" />
+    <meta property="og:video:width" content="{{ info.width }}" />
+    <meta property="og:video:height" content="{{ info.height }}" />
+    <meta property="og:image" content="{{ info.thumbnail }}" />
+
+    <meta property="og:description" content="{{ info.description }}" />
+
+    <link
+        rel="alternate"
+        href="https://embedit.vaskel.gay/ograph?text={{ info.description|safe }}&url={{ url }}"
+        type="application/json+oembed"
+        title="{{ info.author_name }}"
+    />
+    <meta http-equiv="refresh" content="0; url = {{ url|safe }}" /> {% endblock %} {% block body %} Please wait...
+<a href="{{ url }}">Or click here.</a>
+
+{% endblock %}

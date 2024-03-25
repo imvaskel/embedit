@@ -1,0 +1,77 @@
+[tool.poetry]
+name = "embedit"
+version = "0.1.0"
+description = ""
+authors = ["ImVaskel <49348256+ImVaskel@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.110.0"
+uvicorn = {extras = ["standard"], version = "^0.29.0"}
+yt-dlp = "^2024.3.10"
+jinja2 = "^3.1.3"
+asqlite = {git = "https://github.com/rapptz/asqlite"}
+
+
+[tool.poetry.group.dev.dependencies]
+poethepoet = "^0.25.0"
+ruff = "^0.3.4"
+pyright = "^1.1.355"
+pre-commit = "^3.7.0"
+
+[tool.poe.tasks]
+all = ["install", "format", "check", "lint"]
+check = "pyright"
+format = "ruff format ."
+install = "poetry install"
+lint = "ruff check ."
+run = "uvicorn embedit.__main__:app"
+dev.ref = "run --reload"
+
+[tool.pyright]
+exclude = ["**/__pycache__", "build", "dist", "docs", ".venv"]
+include = ["base162css", "tests"]
+pythonVersion = "3.11"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportUnusedImport = "error"
+typeCheckingMode = "basic"
+venv = ".venv/"
+venvPath = "."
+
+[tool.ruff]
+fix = true
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+ignore = []
+select = [
+    # flake8-2020
+    "YTT", # flake8-bandit
+    "S",   # flake8-bugbear
+    "B",   # flake8-builtins
+    "A",   # flake8-comprehensions
+    "C4",  # flake8-debugger
+    "T10", # flake8-simplify
+    "SIM", # isort
+    "I",   # mccabe
+    "C90", # pycodestyle
+    "E",
+    "W",   # pyflakes
+    "F",   # pygrep-hooks
+    "PGH", # pyupgrade
+    "UP",  # ruff
+    "RUF", # tryceratops
+    "TRY",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.ruff.format]
+preview = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
