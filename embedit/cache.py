@@ -8,7 +8,7 @@ from fastapi import FastAPI
 
 from .metadata import OpenGraphData
 
-__all__ = ("ensure_database", "lifespan", "insert_data")
+__all__ = ("ensure_database", "lifespan", "cache_data")
 
 
 @asynccontextmanager
@@ -26,7 +26,7 @@ async def ensure_database(conn: asqlite.Connection):
         await conn.commit()
 
 
-async def insert_data(conn: asqlite.Connection, info: OpenGraphData, url: str):
+async def cache_data(conn: asqlite.Connection, info: OpenGraphData, url: str):
     # Yes, i know this is cursed. But I'm lazy.
     async with conn.cursor() as cursor:
         tomorrow = datetime.datetime.now() + datetime.timedelta(days=1)

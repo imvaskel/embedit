@@ -19,13 +19,6 @@
 
     <meta property="og:description" content="{{ info.description }}" />
 
-    <link
-        rel="alternate"
-        href="https://embedit.vaskel.gay/ograph?text={{ info.description|safe }}&url={{ url }}"
-        type="application/json+oembed"
-        title="{{ info.author_name }}"
-    />
-    <meta http-equiv="refresh" content="0; url = {{ url|safe }}" /> {% endblock %} {% block body %} Please wait...
-<a href="{{ url }}">Or click here.</a>
+    <meta http-equiv="refresh" content="0; url = {{ url|safe }}" />
 
 {% endblock %}

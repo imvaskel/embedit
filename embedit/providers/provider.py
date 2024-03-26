@@ -1,13 +1,30 @@
-from typing import Any, ClassVar, Protocol
+import abc
+import asyncio
+import typing
+from typing import ClassVar
 
-from embedit import OpenGraphData
+import yt_dlp
+from fastapi import HTTPException
+
+from embedit import OpenGraphData, YTDLOutput
 
 __all__ = ("Provider",)
 
 
-class Provider(Protocol):
+class Provider(abc.ABC):
     name: ClassVar[str]
 
+    async def _extract_info(self, url: str) -> YTDLOutput:
+        """Uses ytdlp to extract the given url. This is wrapped in to_thread
+        to make it async and if it does not return anything, it raises a 404.
+        """
+        with yt_dlp.YoutubeDL() as ytdl:
+            res = await asyncio.to_thread(ytdl.extract_info, url, download=False)
+            if not res:
+                raise HTTPException(404)
+            return typing.cast(YTDLOutput, res)
+
+    @abc.abstractmethod
     def match_url(self, url: str) -> bool:
         """Matches whether the given url is for this provider.
 
@@ -19,26 +36,15 @@ class Provider(Protocol):
         """
         ...
 
-    def alter_url(self, url: str) -> str:
-        """Alters a url if need be. This should be implemented by subclasses to alter the urls, as the main
-        webserver calls this.
+    @abc.abstractmethod
+    async def parse(self, url: str) -> OpenGraphData:
+        """Parses the page and generates the opengraph metadata for embedding. This should
+        throw a :class:`fastapi.HttpException` if an error occurs.
 
         Args:
-            url (str): The url.
+            url (str): The url to parse.
 
         Returns:
-            str: The URL to the post, potentially altered.
-        """
-        return url
-
-    async def parse_page(self, data: dict[str, Any]) -> OpenGraphData | None:
-        """Parses the page and generates the opengraph metadata for embedding.
-
-        Args:
-            data (dict[str, Any]): The data extracted from yt-dl's ``YoutubeDL.extract_info``.
-
-        Returns:
-            OpenGraphData | None: The open graph object representing the data parsed. ``None`` if the parsing
-            failed for whatever reason.
+            OpenGraphData: The open graph object representing the data parsed.
         """
         ...

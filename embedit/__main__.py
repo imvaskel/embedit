@@ -1,11 +1,10 @@
 import json
-from typing import Any
 
 import asqlite
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.templating import Jinja2Templates
 
-from embedit import OpenGraphData, OpenGraphVideoData, extract_info, find_provider, insert_data, lifespan
+from embedit import OpenGraphData, OpenGraphVideoData, cache_data, find_provider, lifespan
 from embedit.providers import Provider
 
 app = FastAPI(lifespan=lifespan)
@@ -16,14 +15,6 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/")
 async def health_check():
     return "hi"
-
-
-@app.get("/json/{url:path}")
-async def get_json(response: Response, url: str):
-    provider: Provider | None = find_provider(url)
-    if not provider:
-        response.status_code = 404
-        return
 
 
 @app.middleware("http")
@@ -63,20 +54,11 @@ async def gen_ograph_json(text: str, url: str):
 async def get_url(request: Request, response: Response, url: str):
     provider: Provider | None = find_provider(url)
     if not provider:
-        response.status_code = 404
-        return
+        raise HTTPException(404)
 
-    data: dict[str, Any] | None = await extract_info(url)
-    if not data:
-        response.status_code = 404
-        return
-
-    info = await provider.parse_page(data)
-    if not info:
-        response.status_code = 500
-        return
+    info = await provider.parse(url)
 
     async with asqlite.connect("cache.db") as conn:
-        await insert_data(conn, info, url)
+        await cache_data(conn, info, url)
 
     return templates.TemplateResponse(request, info.to_template(), {"info": info, "url": url})
