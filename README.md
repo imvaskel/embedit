@@ -48,7 +48,7 @@ You can run ``poetry run poe dev`` to start the development server. Additionally
 <summary>More information on providers</summary>
 <br />
 If you would like to contribute another provider for
-other social medias, take a look [at the code](embedit/providers/provider.py) for the base provider. Also in that directory are other implmented providers for usage as a base.
+other social medias, take a look <a href="/embedit/providers/provider.py">at the code</a> for the base provider. Also in that directory are other implmented providers for usage as a base.
 
 A couple of notes:
 
