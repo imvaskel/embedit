@@ -21,7 +21,7 @@ pyright = "^1.1.355"
 pre-commit = "^3.7.0"
 
 [tool.poe.tasks]
-all = ["install", "format", "check", "lint"]
+all = ["format", "check", "lint"]
 check = "pyright"
 format = "ruff format ."
 install = "poetry install"

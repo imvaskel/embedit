@@ -1,0 +1,6 @@
+url=""
+repo="https://github.com/imvaskel/embedit"
+color="#FFFFFF"
+
+[sqlite]
+file = "cache.db"
