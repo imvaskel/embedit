@@ -58,6 +58,14 @@ A couple of notes:
 
 </details>
 
+## Acknowledgements
+
+ - [vxtiktok](https://github.com/dylanpdx/vxtiktok)
+ - [InstaFix](https://github.com/Wikidepia/InstaFix)
+ - [fixupx/FxTwitter](https://github.com/FixTweet/FxTwitter)
+
+All of these projects helped me with figuring out how to parse webpages, display opengraph data, and many other things.
+
 
 ## License
 
