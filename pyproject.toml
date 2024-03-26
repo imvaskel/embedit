@@ -26,8 +26,8 @@ check = "pyright"
 format = "ruff format ."
 install = "poetry install"
 lint = "ruff check ."
-run = "uvicorn embedit.__main__:app"
-dev.ref = "run --reload"
+run = "uvicorn embedit.__main__:app --log-config=log_conf.yaml"
+dev.ref = "run --reload --reload-exclude .git/**/*,cache.db"
 
 [tool.pyright]
 exclude = ["**/__pycache__", "build", "dist", "docs", ".venv"]
