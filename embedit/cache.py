@@ -6,7 +6,7 @@ from dataclasses import asdict
 import asqlite
 from fastapi import FastAPI
 
-from .metadata import OpenGraphData, OpenGraphVideoData
+from .metadata import OpenGraphBaseData, OpenGraphImageData, OpenGraphTextData, OpenGraphVideoData
 
 __all__ = ("ensure_database", "lifespan", "cache_data")
 
@@ -26,7 +26,7 @@ async def ensure_database(conn: asqlite.Connection):
         await conn.commit()
 
 
-async def cache_data(conn: asqlite.Connection, info: OpenGraphData, url: str):
+async def cache_data(conn: asqlite.Connection, info: OpenGraphBaseData, url: str):
     # Yes, i know this is cursed. But I'm lazy.
     async with conn.cursor() as cursor:
         tomorrow = datetime.datetime.now() + datetime.timedelta(days=1)
@@ -39,7 +39,7 @@ async def cache_data(conn: asqlite.Connection, info: OpenGraphData, url: str):
         )
 
 
-async def try_cache(conn: asqlite.Connection, url: str) -> OpenGraphData | None:
+async def try_cache(conn: asqlite.Connection, url: str) -> OpenGraphBaseData | None:
     async with conn.cursor() as cursor:
         res = await cursor.execute("SELECT * FROM cache WHERE url = ?", url)
         row = await res.fetchone()
@@ -52,6 +52,8 @@ async def try_cache(conn: asqlite.Connection, url: str) -> OpenGraphData | None:
             case "video":
                 return OpenGraphVideoData(**data)
             case "text":
-                return OpenGraphData(**data)
+                return OpenGraphTextData(**data)
+            case "image":
+                return OpenGraphImageData(**data)
             case _:
                 raise Exception("Invalid data type.")  # noqa: TRY002, TRY003

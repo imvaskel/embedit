@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 import abc
 import asyncio
-import typing
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import yt_dlp
 from fastapi import HTTPException
 
-from embedit import OpenGraphData, YTDLOutput
+if TYPE_CHECKING:
+    from embedit import OpenGraphBaseData, YTDLOutput
 
 __all__ = ("Provider",)
 
@@ -22,7 +24,7 @@ class Provider(abc.ABC):
             res = await asyncio.to_thread(ytdl.extract_info, url, download=False)
             if not res:
                 raise HTTPException(404)
-            return typing.cast(YTDLOutput, res)
+            return res  # type: ignore - due to circular imports i cannot cast
 
     @abc.abstractmethod
     def match_url(self, url: str) -> bool:
@@ -37,7 +39,7 @@ class Provider(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def parse(self, url: str) -> OpenGraphData:
+    async def parse(self, url: str) -> OpenGraphBaseData:
         """Parses the page and generates the opengraph metadata for embedding. This should
         throw a :class:`fastapi.HttpException` if an error occurs.
 

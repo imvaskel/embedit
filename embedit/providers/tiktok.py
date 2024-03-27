@@ -1,4 +1,12 @@
-from embedit import Format, OpenGraphData, OpenGraphVideoData, YTDLOutput
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from embedit import OpenGraphBaseData, YTDLOutput
+
+
+from embedit import Format, OpenGraphVideoData
 
 from .provider import Provider
 
@@ -10,7 +18,7 @@ class TikTokProvider(Provider):
         # TODO: Do this
         return url.startswith("https://www.tiktok")
 
-    async def parse(self, url: str) -> OpenGraphData:
+    async def parse(self, url: str) -> OpenGraphBaseData:
         data: YTDLOutput = await self._extract_info(url)
 
         description: str = data["description"]

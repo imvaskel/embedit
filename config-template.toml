@@ -3,4 +3,4 @@ repo="https://github.com/imvaskel/embedit"
 color="#FFFFFF"
 
 [sqlite]
-file = "cache.db"
+file = "file:cache.db?mode=memory&cache=shared"
