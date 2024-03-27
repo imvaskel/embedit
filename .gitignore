@@ -1,3 +1,4 @@
 cache.db*
 __pycache__
 config.toml
+.ruff_cache
