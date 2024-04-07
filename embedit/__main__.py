@@ -1,13 +1,22 @@
+import base64
 import logging
 from typing import Annotated
 
 import asqlite
 import yt_dlp
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from embedit import CONFIG, cache_data, ensure_database, find_provider, is_bot, try_cache
+from embedit import (
+    CONFIG,
+    cache_data,
+    ensure_database,
+    find_provider,
+    generate_html,
+    is_bot,
+    try_cache,
+)
 from embedit.providers import Provider
 
 pool: asqlite.Pool | None = None
@@ -39,18 +48,13 @@ async def healthcheck() -> str:
 
 
 @app.get("/ograph/")
-async def gen_ograph_json(url: str, title: str) -> dict[str, str]:
-    async with asqlite.connect(CONFIG["sqlite"]["file"]) as conn:
-        res = await try_cache(conn, url)
-        if not res:
-            raise HTTPException(404)
-
+async def gen_ograph_json(author_name: str, title: str, url: str) -> dict[str, str]:
     return {
-        "author_name": res.description,
+        "author_name": base64.b64decode(author_name).decode(),
         "author_url": url,
         "provider_name": "embedit",
-        "provider_url": CONFIG["url"],
-        "title": title,
+        "provider_url": CONFIG["repo"],
+        "title": f"Embedit - {title}",
         "type": "link",
         "version": "1.0",
     }
@@ -62,30 +66,22 @@ async def handle_ytdlp_error(request: Request, exc: yt_dlp.DownloadError):
     return Response(status_code=400)
 
 
-@app.get("/{url:path}")
+@app.get("/{url:path}", response_class=HTMLResponse)
 async def get_url(pool: Annotated[asqlite.Pool, Depends(database)], request: Request, url: str):
     async with pool.acquire() as conn:
         url = request.url.path.lstrip("/")
         info = await try_cache(conn, url)
         if info:
             logger.info("cache hit on endpoint %s, returning cache.", url)
-            if is_bot(request.headers.get("User-Agent", "")):
-                return templates.TemplateResponse(
-                    request, info.to_template(), {"info": info, "url": url, "color": info.color or CONFIG["color"]}
-                )
-            else:
-                return RedirectResponse(url)
-    provider: Provider | None = find_provider(url)
-    if not provider:
-        raise HTTPException(404)
+        else:
+            provider: Provider | None = find_provider(url)
+            if not provider:
+                raise HTTPException(404)
 
-    info = await provider.parse(url)
+            info = await provider.parse(url)
 
-    async with pool.acquire() as conn:
-        await cache_data(conn, info, url)
+            await cache_data(conn, info, url)
 
     if is_bot(request.headers["User-Agent"]):
-        return templates.TemplateResponse(
-            request, info.to_template(), {"info": info, "url": url, "color": info.color or CONFIG["color"]}
-        )
+        return generate_html(head_children=info.to_meta(), body_children=None)
     return RedirectResponse(url)

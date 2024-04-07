@@ -15,6 +15,7 @@ __all__ = ("Provider",)
 
 class Provider(abc.ABC):
     name: ClassVar[str]
+    color: ClassVar[str | None]
 
     async def _extract_info(self, url: str) -> YTDLOutput:
         """Uses ytdlp to extract the given url. This is wrapped in to_thread

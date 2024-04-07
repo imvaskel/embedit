@@ -1,16 +1,20 @@
+from __future__ import annotations
+
 import asyncio
+import html
 import logging
 import re
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import HTTPException
 from twitter.scraper import Scraper
 from twitter.util import init_session
 
-from embedit import OpenGraphBaseData, OpenGraphImageData, OpenGraphTextData, OpenGraphVideoData
-
 from .provider import Provider
+
+if TYPE_CHECKING:
+    from embedit import OpenGraphBaseData
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +31,7 @@ class ScraperWrapper:
     _created: datetime
 
     def __init__(self) -> None:
-        self._scraper: Scraper = Scraper(session=init_session())
+        self._scraper = Scraper(session=init_session(), save=False)
         self._created = datetime.now()
 
     @property
@@ -51,11 +55,14 @@ size_regex = re.compile(r"(?P<width>\d+)x(?P<height>\d+)")
 
 class TwitterProvider(Provider):
     name = "Twitter"
+    color = "#1DA1F2"
 
     def match_url(self, url: str) -> bool:
         return url.startswith("https://twitter") or url.startswith("https://x")
 
     async def parse(self, url: str) -> OpenGraphBaseData:
+        from embedit import OpenGraphImageData, OpenGraphTextData, OpenGraphVideoData
+
         match = regex.match(url)
         if not match:
             raise HTTPException(404)
@@ -77,7 +84,7 @@ class TwitterProvider(Provider):
         legacy = result["legacy"]
         user = result["core"]["user_results"]["result"]["legacy"]
 
-        text = legacy["full_text"]
+        text = html.escape(legacy["full_text"])
         author = f"{user['name']} (@{user['screen_name']})"
         author_url = f"https://twitter.com/{user['screen_name']}"
 
@@ -91,11 +98,13 @@ class TwitterProvider(Provider):
                 return OpenGraphImageData(
                     title="Twitter",
                     description=text,
-                    url=url,
+                    media_url=url,
                     author_name=author,
                     author_url=author_url,
                     height=height,
                     width=width,
+                    url=url,
+                    color=self.color,
                 )
             elif media["type"] == "video":
                 variants = media["video_info"]["variants"]
@@ -115,12 +124,14 @@ class TwitterProvider(Provider):
                 return OpenGraphVideoData(
                     title="Twitter",
                     description=text,
-                    url=video_url,
+                    media_url=video_url,
                     author_name=author,
                     author_url=author_url,
-                    thumbnail=url,
+                    thumbnail_url=url,
                     width=width,
                     height=height,
+                    url=url,
+                    color=self.color,
                 )
 
         author_avatar = user["profile_image_url_https"]
@@ -130,4 +141,6 @@ class TwitterProvider(Provider):
             author_name=author,
             author_url=author_url,
             author_avatar=author_avatar,
+            url=url,
+            color=self.color,
         )

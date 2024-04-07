@@ -4,9 +4,10 @@ from contextlib import asynccontextmanager
 from dataclasses import asdict
 
 import asqlite
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from .metadata import OpenGraphBaseData, OpenGraphImageData, OpenGraphTextData, OpenGraphVideoData
+from .utils import find_provider
 
 __all__ = ("ensure_database", "lifespan", "cache_data")
 
@@ -37,6 +38,18 @@ async def cache_data(conn: asqlite.Connection, info: OpenGraphBaseData, url: str
             tomorrow.timestamp(),
             info.to_type(),
         )
+
+
+async def get_and_cache(conn: asqlite.Connection, url: str) -> OpenGraphBaseData:
+    info = await try_cache(conn, url)
+    if info:
+        return info
+
+    provider = find_provider(url)
+    if not provider:
+        raise HTTPException(404)
+
+    return await provider.parse(url)
 
 
 async def try_cache(conn: asqlite.Connection, url: str) -> OpenGraphBaseData | None:
